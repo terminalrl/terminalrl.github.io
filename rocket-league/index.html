@@ -20,31 +20,35 @@
 <main class="wrap">
 <section id="viewer">
   <h2>Replay viewer</h2>
-  <p class="muted">Recorded bot games. Blue is Terminal and attacks the goal at the far end of the default view. Drag to look around, scroll or pinch to zoom.</p>
+  <p class="muted">Four full 5-minute games, recorded in simulation. Terminal is blue and attacks the goal on the right of the default view. The scene is drawn procedurally in your browser; no game assets are used. Space plays or pauses, arrow keys seek, N / P jump to the next / previous goal, C or 1-5 switch camera, drag to orbit.</p>
   <div class="viewer" id="viewerBox">
-    <div class="stage" id="stage">
+    <div class="stage" id="stage" tabindex="0">
       <div class="hud" id="hud" hidden>
-        <span class="sc"><b class="tb">Terminal</b> <span id="s0">0</span> - <span id="s1">0</span> <b class="to" id="oppName">Nexto</b></span>
-        <span class="tm" id="timeTxt">0:00.0</span>
+        <div class="boosts l" id="boostL"></div>
+        <div class="board"><span class="nm tb">Terminal</span><span class="sc" id="s0">0</span><span class="clock" id="clock">5:00</span><span class="sc" id="s1">0</span><span class="nm to" id="oppName">Nexto</span></div>
+        <div class="boosts r" id="boostR"></div>
       </div>
-      <div class="banner" id="banner" hidden></div>
+      <div class="banner" id="banner"><span>GOAL!</span><small id="bannerTxt"></small></div>
+      <button class="bigplay" id="bigplay" hidden aria-label="Play">&#9654;</button>
       <div class="msg" id="msg">Loading 3-D viewer&hellip;</div>
     </div>
     <div class="ctl">
       <div class="row">
         <button id="play" class="btn" aria-label="Play or pause">Play</button>
-        <input id="scrub" type="range" min="0" max="1" step="0.01" value="0" aria-label="Scrub">
+        <button id="prevg" class="chip" title="Previous goal (P)" aria-label="Previous goal">&laquo;</button>
+        <div class="track"><input id="scrub" type="range" min="0" max="1" step="0.01" value="0" aria-label="Scrub"><div class="markers" id="markers"></div></div>
+        <button id="nextg" class="chip" title="Next goal (N)" aria-label="Next goal">&raquo;</button>
       </div>
       <div class="row wrapr">
-        <div class="grp" id="speeds"><button class="chip" data-s="0.5">0.5x</button><button class="chip on" data-s="1">1x</button><button class="chip" data-s="2">2x</button></div>
-        <div class="grp" id="cams"><button class="chip on" data-c="orbit">Orbit</button><button class="chip" data-c="free">Free</button><button class="chip" data-c="follow">Follow car</button><button class="chip" data-c="ball">Ball cam</button><button class="chip" data-c="top">Top-down</button></div>
+        <div class="grp" id="speeds"><button class="chip" data-s="0.5">0.5x</button><button class="chip on" data-s="1">1x</button><button class="chip" data-s="2">2x</button><button class="chip" data-s="4">4x</button></div>
+        <div class="grp" id="cams"><button class="chip on" data-c="broadcast">Broadcast</button><button class="chip" data-c="chase">Chase</button><button class="chip" data-c="car">Car cam</button><button class="chip" data-c="orbit">Orbit</button><button class="chip" data-c="top">Top-down</button></div>
       </div>
       <div class="row wrapr">
         <label class="sel">Game <select id="gameSel"></select></label>
         <label class="sel" id="carWrap">Car <select id="carSel"></select></label>
+        <button class="chip" id="qual">High quality</button><button class="chip" id="full">Fullscreen</button>
       </div>
       <p class="small muted" id="gameNote"></p>
-      <p class="small muted">Free camera: drag to look, mouse wheel / pinch to move, W A S D Q E on a keyboard.</p>
     </div>
   </div>
 </section>
@@ -85,7 +89,7 @@
 
 <footer class="wrap">
   <p>Bots are not published and cannot be downloaded. Simulation: RocketSim. Opponents: Nexto/Necto (RLGym team, CC BY-NC-SA 4.0), ChadGPT. Wisp v2 is a public GigaLearn bot used as a benchmark.</p>
-  <p>3-D clips rendered with BeautifulVis (car and arena models by ZealanL). The interactive viewer draws a simplified procedural arena with three.js.</p>
+  <p>3-D clips rendered with BeautifulVis (car and arena models by ZealanL). The interactive viewer draws a procedural arena and cars with three.js (no game assets).</p>
 </footer>
 <script src="js/viewer.js" defer></script>
 </body>

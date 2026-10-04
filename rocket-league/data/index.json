@@ -1,74 +1,30 @@
 [
  {
-  "id": "1v1_win",
-  "label": "1v1: Terminal (K6) vs Nexto - win",
+  "id": "3v3_nexto",
+  "label": "3v3: Terminal vs Nexto (final 6-0)",
   "opp": "Nexto",
-  "note": "Start from a random (non-kickoff) state.",
-  "file": "data/1v1_win.json",
-  "seconds": 10.0
+  "hdr": "data/3v3_nexto.json",
+  "bin": "data/3v3_nexto.bin"
  },
  {
-  "id": "1v1_loss",
-  "label": "1v1: Terminal (K6) vs Nexto - loss (we concede)",
-  "opp": "Nexto",
-  "note": "Start from a random state. A loss, shown honestly.",
-  "file": "data/1v1_loss.json",
-  "seconds": 4.6
- },
- {
-  "id": "2v2_seg001",
-  "label": "2v2: Terminal (T8) vs Nexto - win",
-  "opp": "Nexto",
-  "note": "Excerpt of a 5-minute game ending in a goal.",
-  "file": "data/2v2_seg001.json",
-  "seconds": 36.4
- },
- {
-  "id": "2v2_seg005",
-  "label": "2v2: Terminal (T8) vs Nexto - quick goal",
-  "opp": "Nexto",
-  "note": "Excerpt of a 5-minute game ending in a goal.",
-  "file": "data/2v2_seg005.json",
-  "seconds": 6.8
- },
- {
-  "id": "2v2_seg000",
-  "label": "2v2: Terminal (T8) vs Nexto - goal against us",
-  "opp": "Nexto",
-  "note": "Excerpt where Nexto scores.",
-  "file": "data/2v2_seg000.json",
-  "seconds": 16.0
- },
- {
-  "id": "3v3_nexto_007",
-  "label": "3v3: Terminal (T8) vs Nexto - win",
-  "opp": "Nexto",
-  "note": "Excerpt of a 5-minute game ending in a goal.",
-  "file": "data/3v3_nexto_007.json",
-  "seconds": 17.4
- },
- {
-  "id": "3v3_nexto_002",
-  "label": "3v3: Terminal (T8) vs Nexto - win (long rally)",
-  "opp": "Nexto",
-  "note": "Excerpt of a 5-minute game ending in a goal.",
-  "file": "data/3v3_nexto_002.json",
-  "seconds": 33.4
- },
- {
-  "id": "3v3_chad_010",
-  "label": "3v3: Terminal (T8) vs ChadGPT - win",
+  "id": "3v3_chadgpt",
+  "label": "3v3: Terminal vs ChadGPT (final 6-2)",
   "opp": "ChadGPT",
-  "note": "Excerpt of a 5-minute game ending in a goal.",
-  "file": "data/3v3_chad_010.json",
-  "seconds": 21.1
+  "hdr": "data/3v3_chadgpt.json",
+  "bin": "data/3v3_chadgpt.bin"
  },
  {
-  "id": "3v3_chad_001",
-  "label": "3v3: Terminal (T8) vs ChadGPT - goal against us",
-  "opp": "ChadGPT",
-  "note": "Excerpt where ChadGPT scores.",
-  "file": "data/3v3_chad_001.json",
-  "seconds": 6.2
+  "id": "2v2_nexto",
+  "label": "2v2: Terminal vs Nexto (final 10-1)",
+  "opp": "Nexto",
+  "hdr": "data/2v2_nexto.json",
+  "bin": "data/2v2_nexto.bin"
+ },
+ {
+  "id": "1v1_nexto",
+  "label": "1v1: Terminal vs Nexto (final 30-1)",
+  "opp": "Nexto",
+  "hdr": "data/1v1_nexto.json",
+  "bin": "data/1v1_nexto.bin"
  }
 ]
