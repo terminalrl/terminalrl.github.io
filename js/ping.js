@@ -1,6 +1,6 @@
 /* Visit ping (site owner's request, 2026-10-04): one ntfy.sh notification per browser session with page, referrer,
    browser/OS, language, timezone, screen, plus the visitor's IP and approximate (city-level) location from geojs.io. No
-   cookies or fingerprinting; the footer says so. A text/plain POST is a CORS "simple" request, so no preflight. If the
+   cookies or fingerprinting. Visitors in Europe: no IP and no IP lookup (see below). A text/plain POST is a CORS "simple" request, so no preflight. If the
    location lookup fails or is blocked, the ping still goes out without it. */
 (function () {
   try {
@@ -22,9 +22,14 @@
         (where ? ' from ' + where : '')) + '&tags=eyes', { method: 'POST', body: msg + extra, keepalive: true, mode: 'no-cors' })
         .catch(function () {});
     }
+    // Europe (owner request 2026-10-04, GDPR): no IP and no IP lookup. A Europe/* timezone skips the geojs call
+    // entirely (the visitor's IP never reaches it); if the lookup itself says Europe (VPN, odd timezone), only the
+    // country is kept.
+    if (/^(Europe\/|Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)$)/.test(tz)) { send('\nLocation: Europe (' + tz + '); IP not logged', 'Europe'); return; }
     var done = false, timer = setTimeout(function () { if (!done) { done = true; send('\nLocation: (lookup timed out)', ''); } }, 4000);
     fetch('https://get.geojs.io/v1/ip/geo.json').then(function (r) { return r.json(); }).then(function (g) {
       if (done) return; done = true; clearTimeout(timer);
+      if (g.continent_code === 'EU') { send('\nLocation: ' + (g.country || 'Europe') + '; IP not logged', g.country || 'Europe'); return; }
       var where = [g.city, g.region, g.country].filter(Boolean).join(', ');
       send('\nLocation: ' + (where || '?') + '\nIP: ' + (g.ip || '?') + '\nNetwork: ' + (g.organization_name || g.organization || '?'), where);
     }).catch(function () { if (!done) { done = true; clearTimeout(timer); send('\nLocation: (lookup failed)', ''); } });
