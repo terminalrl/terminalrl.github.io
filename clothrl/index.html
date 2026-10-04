@@ -15,9 +15,8 @@
   <h1>clothrl</h1>
   <p class="lead">A simulated Franka Panda arm learns to pick up a tapered cork, carry it and press it into a jar, to stack cubes,
     and to drape a cloth over the jar. Every policy is trained with reinforcement learning from a <b>sparse reward</b>: a bonus
-    when the task is done, and nothing that says &ldquo;get closer&rdquo;. The long-term goal is <b>cloth-mediated insertion</b>,
-    pressing the cork into the jar <em>through</em> a cloth draped over its mouth so the cloth is trapped, the soft counterpart of
-    gasket, membrane and seal assembly.</p>
+    when the task is done, and nothing that says &ldquo;get closer&rdquo;. The long-term goal combines them: drape a cloth over the jar's mouth, then push the cork in
+    on top of it, so the cloth ends up pinned between the cork and the jar, much like fitting a seal or gasket.</p>
   <nav class="jump"><a href="#results">Results</a><a href="#sparse">Making a sparse reward work</a><a href="#cloth">Cloth</a><a href="#setup">Setup</a></nav>
 </header>
 
