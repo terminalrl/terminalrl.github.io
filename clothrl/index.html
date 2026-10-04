@@ -44,25 +44,25 @@
 
 <section id="sparse">
   <h2>Making a sparse reward work</h2>
-  <p>With only a success bonus, a random arm essentially never finishes the task, so the policy gets no learning signal at all.
-    Most of the work was making that signal reachable, and removing bugs that silently made the task impossible.</p>
+  <p>In typical RL approaches, dense rewards give the policy a signal at every step about what it's doing right or wrong. However,
+    this can often result in suboptimal policies, or <em>lots</em> of developer time spent tuning reward functions and coefficients.
+    Sparse rewards avoid that, but they're hard to learn from.</p>
   <ul class="pts">
-    <li><b>Start near the goal, then move the start back.</b> Each episode begins in one of about fifteen start states laid
-      backwards along the task: cork already seated, about to insert, hovering, carried, just grasped, hand near the cork, the full task.
-      An adaptive sampler spends episodes where the success rate of reaching the next stage is near 50%, so the policy always practises
-      its frontier and success propagates backwards one stage at a time.</li>
-    <li><b>Check outcomes, not intentions.</b> The first &ldquo;grasped&rdquo; starts were never grasped: the reset computed the hand pose and never
-      applied it, so the cork fell through the air. The reset now measures the real cork-to-fingertip distance every time.</li>
-    <li><b>Define success so it can't be gamed, but don't over-constrain it.</b> Loose rules were exploited (a cork dropped from above
-      self-centres in the jar). Yet the strictest rule, requiring the hand on the cork as it seats, slowed learning about threefold.
-      Letting a dropped-and-seated cork count, and letting the success rate itself teach that careful placement is more reliable, reached
-      99% on the full task in a third of the training.</li>
-    <li><b>Evaluate the deterministic policy.</b> Training numbers come from the noisy exploration policy. Several times they disagreed with
-      the real policy by a wide margin, and each gap turned out to be a real bug.</li>
-    <li><b>Get the physics right.</b> Realistic arm gains and joint-velocity limits, resets that write every joint's position and velocity
-      (an incompletely reset simulation re-exploded every step), and a contact model where a pinched cube does not spin in the grip.</li>
-    <li><b>A bounded action.</b> One clamped joint step per control tick, instead of a relative command re-applied every physics
-      sub-step, which behaved like an unbounded velocity command.</li>
+    <li><b>Start close to success.</b> To kickstart the critic, early training mostly uses initial states that are already close
+      to success. Once the policy can complete the simple versions and values winning states, it slowly learns the full task space.
+      I use an adaptive sampler to choose the initial states that will help the policy learn the most given its current progress:
+      it doesn't sample states it has already learned, and it doesn't sample states that are still too hard.</li>
+    <li><b>Design the starts and the success rule carefully.</b> For this to work, the possible initial states have to be designed so
+      that each one is actually feasible, and &ldquo;success&rdquo; has to be well defined. For the cork, I first defined success as
+      simply being inserted in the jar. That led to two issues: the cork would sometimes end up stable but inserted at an angle, and the
+      policy learned to just drop the cork once it was close rather than insert it (from the initial states right above the jar, the
+      simplest action is to let go). That's technically success, and could be a valid strategy, but it likely won't give a very stable
+      policy, especially once sim-to-real transfer is considered. So I required the hand to have touched the cork while it was seated,
+      as a gate before success. Later I revisited this: with better initial-state design (so the policy learns that placing carefully
+      works more often), it learned to place the cork without dropping it about 3x faster without the gate than with it.</li>
+    <li><b>Other things that helped:</b> rewriting Isaac Lab's relative joint position action so that it holds one target per policy
+      step rather than re-applying the offset at every physics step (relevant with decimation); a <em>lot</em> of iteration on the Newton
+      physics and VBD solver parameters for the cork and the cloth; and adjusting the robot arm's PD gains.</li>
   </ul>
   <figure class="chart"><img loading="lazy" src="img/milestones.png" width="1950" height="806" alt="Deterministic success of the cork and cube tasks after each change, from 0 to about 1"><figcaption>What moved each task from 0 to about 1, with the reward unchanged throughout.</figcaption></figure>
   <div class="grid">
