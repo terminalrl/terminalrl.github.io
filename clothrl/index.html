@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>clothrl - manipulation from a sparse reward</title>
+<meta name="description" content="A simulated Franka arm learns to insert a cork into a jar, stack cubes and drape a cloth, trained with reinforcement learning from a sparse success reward in GPU-parallel physics.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='9' y='6' width='14' height='22' rx='3' fill='%2336a2ff'/%3E%3Crect x='11' y='2' width='10' height='7' rx='2' fill='%23ff9a3c'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<p class="wrap" style="margin:16px auto 0"><a href="../" style="color:var(--mu);text-decoration:none">&larr; TerminalRL</a></p>
+<header class="hero wrap">
+  <p class="eyebrow">Robot manipulation</p>
+  <h1>clothrl</h1>
+  <p class="lead">A simulated Franka Panda arm learns to pick up a tapered cork, carry it and press it into a jar, to stack cubes,
+    and to drape a cloth over the jar. Every policy is trained with reinforcement learning from a <b>sparse reward</b>: a bonus
+    when the task is done, and nothing that says &ldquo;get closer&rdquo;. The long-term goal is <b>cloth-mediated insertion</b>,
+    pressing the cork into the jar <em>through</em> a cloth draped over its mouth so the cloth is trapped, the soft counterpart of
+    gasket, membrane and seal assembly.</p>
+  <nav class="jump"><a href="#results">Results</a><a href="#sparse">Making a sparse reward work</a><a href="#cloth">Cloth</a><a href="#setup">Setup</a></nav>
+</header>
+
+<main class="wrap">
+<section id="results">
+  <h2>Results</h2>
+  <div class="grid">
+    <figure><video controls preload="none" playsinline muted poster="media/cork_table.jpg"><source src="media/cork_table.mp4" type="video/mp4"></video><figcaption>Cork upright on the table: reach, grasp, carry, insert, release.</figcaption></figure>
+    <figure><video controls preload="none" playsinline muted poster="media/cork_lying.jpg"><source src="media/cork_lying.mp4" type="video/mp4"></video><figcaption>Cork lying on its side: pick it up, stand it upright in the hand, insert.</figcaption></figure>
+    <figure><video controls preload="none" playsinline muted poster="media/cube_stack.jpg"><source src="media/cube_stack.mp4" type="video/mp4"></video><figcaption>Two-cube stack from the arm's home pose.</figcaption></figure>
+    <figure><video controls preload="none" playsinline muted poster="media/cloth_drape.jpg"><source src="media/cloth_drape.mp4" type="video/mp4"></video><figcaption>Cloth drape: pinch the sheet's edge and land it over the jar (stiffer cloth; see <a href="#cloth">Cloth</a>).</figcaption></figure>
+  </div>
+  <p class="muted">Success of the trained policy with deterministic actions, from the full-task start, over hundreds of episodes.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Task</th><th>Start</th><th>Success</th><th>Typical time</th></tr></thead>
+    <tbody>
+      <tr><td>Cork insertion</td><td>cork upright on the table, arm at home</td><td>0.99</td><td>2.4&ndash;2.6 s</td></tr>
+      <tr><td>Cork insertion</td><td>cork lying on its side</td><td>0.79</td><td>3&ndash;6 s</td></tr>
+      <tr><td>Two-cube stack</td><td>cube on the table, arm at home</td><td>0.999</td><td>1.9 s</td></tr>
+      <tr><td>Cloth drape</td><td>sheet standing in a slot</td><td>1.00</td><td>1.4 s</td></tr>
+    </tbody></table></div>
+  <p class="caveat">Simulation only. The cloth drape is a throw, not a placement: the arm swings the sheet and lets go so it lands over the jar.</p>
+</section>
+
+<section id="sparse">
+  <h2>Making a sparse reward work</h2>
+  <p>With only a success bonus, a random arm essentially never finishes the task, so the policy gets no learning signal at all.
+    Most of the work was making that signal reachable, and removing bugs that silently made the task impossible.</p>
+  <ul class="pts">
+    <li><b>Start near the goal, then move the start back.</b> Each episode begins in one of about fifteen start states laid
+      backwards along the task: cork already seated, about to insert, hovering, carried, just grasped, hand near the cork, the full task.
+      An adaptive sampler spends episodes where the success rate of reaching the next stage is near 50%, so the policy always practises
+      its frontier and success propagates backwards one stage at a time.</li>
+    <li><b>Check outcomes, not intentions.</b> The first &ldquo;grasped&rdquo; starts were never grasped: the reset computed the hand pose and never
+      applied it, so the cork fell through the air. The reset now measures the real cork-to-fingertip distance every time.</li>
+    <li><b>Define success so it can't be gamed, but don't over-constrain it.</b> Loose rules were exploited (a cork dropped from above
+      self-centres in the jar). Yet the strictest rule, requiring the hand on the cork as it seats, slowed learning about threefold.
+      Letting a dropped-and-seated cork count, and letting the success rate itself teach that careful placement is more reliable, reached
+      99% on the full task in a third of the training.</li>
+    <li><b>Evaluate the deterministic policy.</b> Training numbers come from the noisy exploration policy. Several times they disagreed with
+      the real policy by a wide margin, and each gap turned out to be a real bug.</li>
+    <li><b>Get the physics right.</b> Realistic arm gains and joint-velocity limits, resets that write every joint's position and velocity
+      (an incompletely reset simulation re-exploded every step), and a contact model where a pinched cube does not spin in the grip.</li>
+    <li><b>A bounded action.</b> One clamped joint step per control tick, instead of a relative command re-applied every physics
+      sub-step, which behaved like an unbounded velocity command.</li>
+  </ul>
+  <figure class="chart"><img loading="lazy" src="img/milestones.png" width="1950" height="806" alt="Deterministic success of the cork and cube tasks after each change, from 0 to about 1"><figcaption>What moved each task from 0 to about 1, with the reward unchanged throughout.</figcaption></figure>
+  <div class="grid">
+    <figure><video controls preload="none" playsinline muted poster="media/failure_cube_spin.jpg"><source src="media/failure_cube_spin.mp4" type="video/mp4"></video><figcaption>A failure mode: with one contact point per finger the cube pivots in the closed gripper.</figcaption></figure>
+    <figure class="chart" style="margin:0"><img loading="lazy" src="img/contact_grip.png" width="1200" height="480" alt="Share of cubes tilting more than 20 degrees during a scripted lift under three contact configurations"><figcaption>Scripted grasp and lift: the contact model decides whether a pinch holds.</figcaption></figure>
+  </div>
+</section>
+
+<section id="cloth">
+  <h2>Cloth</h2>
+  <p>Before any learning, a standalone cloth simulation tested the core idea: if a cork is pressed into the jar through a cloth, is the
+    cloth actually trapped? With the cork seated, all of the cloth in the bore stays when the cloth edge is pulled; with no cork, none
+    of it does. The seal held across an eightfold range of cork-to-bore gap.</p>
+  <div class="grid">
+    <figure><video controls preload="none" playsinline muted poster="media/poc_trap.jpg"><source src="media/poc_trap.mp4" type="video/mp4"></video><figcaption>Proof of concept: the cork pins the cloth in the bore.</figcaption></figure>
+    <figure><video controls preload="none" playsinline muted poster="media/poc_null.jpg"><source src="media/poc_null.mp4" type="video/mp4"></video><figcaption>The control: without a cork the cloth pulls free; with one it is held.</figcaption></figure>
+  </div>
+  <p>The drape policy above pinches a sheet standing in a slot and throws it over the jar, with the same sparse reward. It used a
+    stiffer cloth than the proof of concept. Work in progress: a soft, tablecloth-like cloth lying on the table with nothing holding it,
+    picked up by the edge that hangs over the table, then the full drape-and-insert task.</p>
+</section>
+
+<section id="setup">
+  <h2>Setup</h2>
+  <div class="tbl"><table>
+    <tbody>
+      <tr><th>Robot</th><td>Franka Panda, 7-DoF arm with a parallel gripper, realistic joint gains and velocity limits</td></tr>
+      <tr><th>Physics</th><td>Isaac Lab on the Newton engine (MuJoCo-Warp for rigid bodies, VBD for cloth), GPU-parallel</td></tr>
+      <tr><th>Learning</th><td>PPO, 1,024 parallel environments on one GPU, 30 Hz control</td></tr>
+      <tr><th>Action</th><td>bounded joint-position steps (up to 2.5 rad/s) and an open/close gripper</td></tr>
+      <tr><th>Reward</th><td>+2 once on success; a negligible penalty on failure; tiny action and joint-speed penalties. No distance shaping.</td></tr>
+    </tbody></table></div>
+</section>
+</main>
+
+<footer class="wrap">
+  <p>Trained policies are not published. All results are from simulation.</p>
+</footer>
+</body>
+</html>
