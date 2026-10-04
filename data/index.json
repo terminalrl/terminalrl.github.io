@@ -11,7 +11,7 @@
   "id": "1v1_loss",
   "label": "1v1: Terminal (K6) vs Nexto - loss (we concede)",
   "opp": "Nexto",
-  "note": "Start from a random state. A loss, shown honestly: Terminal wins about 87% of such starts.",
+  "note": "Start from a random state. A loss, shown honestly.",
   "file": "data/1v1_loss.json",
   "seconds": 4.6
  },

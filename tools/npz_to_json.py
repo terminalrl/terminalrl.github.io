@@ -15,7 +15,7 @@ K = B + "k6_1v1/sp1v1_attn_k6_big2gpu_s0_it238_vs_nexto_"
 # (id, file, label, opponent, our side 0=blue, honest note)
 GAMES = [
     ("1v1_win", K + "win_random107_s0.npz", "1v1: Terminal (K6) vs Nexto - win", "Nexto", "Start from a random (non-kickoff) state."),
-    ("1v1_loss", K + "loss_random255_s0.npz", "1v1: Terminal (K6) vs Nexto - loss (we concede)", "Nexto", "Start from a random state. A loss, shown honestly: Terminal wins about 87% of such starts."),
+    ("1v1_loss", K + "loss_random255_s0.npz", "1v1: Terminal (K6) vs Nexto - loss (we concede)", "Nexto", "Start from a random state. A loss, shown honestly."),
     ("2v2_seg001", B + "2v2_nexto/2v2_seg001_blue_goal_36.4s.npz", "2v2: Terminal (T8) vs Nexto - win", "Nexto", "Excerpt of a 5-minute game ending in a goal."),
     ("2v2_seg005", B + "2v2_nexto/2v2_seg005_blue_goal_6.8s.npz", "2v2: Terminal (T8) vs Nexto - quick goal", "Nexto", "Excerpt of a 5-minute game ending in a goal."),
     ("2v2_seg000", B + "2v2_nexto/2v2_seg000_orange_goal_16.0s.npz", "2v2: Terminal (T8) vs Nexto - goal against us", "Nexto", "Excerpt where Nexto scores."),
