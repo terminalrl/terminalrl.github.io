@@ -550,7 +550,8 @@
     var toGoal = Math.abs(bv[2]) > 2200 && Math.abs(ballObj.position.z) > 2800 && bv[2] * ballObj.position.z > 0;
     var wantHi = ballY > 1000 || toGoal;
     if (wantHi !== D.hi && t - D.hiT > (wantHi ? 0.4 : 0.7) * hz && t - D.t0 > 1.2 * hz) { D.hi = wantHi; D.hiT = t; D.t0 = t; oldShot = 'x'; }
-    if (g.hold[i]) shot = 'goal'; else if (kt >= 0 && i - kt < 3 * hz) shot = 'kick'; else if (D.hi) shot = 'high';
+    // Kickoffs use the ball cam on the focus car (as the game's replay director does): a fixed wide shot made the cars tiny.
+    if (g.hold[i]) shot = 'goal'; else if (D.hi) shot = 'high';
     if (shot !== oldShot || D.focus !== oldFocus) { if (shot !== D.shot || D.focus !== oldFocus || jump) { camSnap = true; D.t0 = t; dirSm.set(1, 0, 0); } }
     D.shot = shot; D.last = t;
     var nm = $('carSel').options[D.focus]; $('ftag').textContent = nm ? nm.textContent : '';
