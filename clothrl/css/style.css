@@ -45,3 +45,4 @@ footer{color:var(--mu);font-size:.88rem;padding-top:32px;padding-bottom:48px;bor
 .pts li{margin:0 0 12px;color:#c5cee0}
 .pts b{color:var(--tx)}
 #setup th{width:7em;vertical-align:top}
+.stack{display:flex;flex-direction:column;gap:14px}
