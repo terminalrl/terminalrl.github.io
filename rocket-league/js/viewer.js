@@ -591,9 +591,10 @@
         if (snap) camPos.copy(want); camPos.lerp(want, sm(dt, 6)); camTgt.lerp(look, snap ? 1 : sm(dt, 6));
       } else if (D.shot === 'wide') {
         // Third-person field shot (broadcast style): high on the sideline, looking across the pitch at the ball.
-        fov = 40 * Math.max(1, Math.min(1.8, 1.55 / camera.aspect));
-        look.set(bp.x * 0.5, 80 + bp.y * 0.5, Math.max(-4000, Math.min(4000, bp.z)));
-        want.set(-(W + 900), 1900 + bp.y * 0.2, look.z * 0.8);
+        // Closer than a full-pitch overview so cars stay readable (review 2026-10-04: the first version made them specks).
+        fov = 36 * Math.max(1, Math.min(1.8, 1.55 / camera.aspect));
+        look.set(bp.x * 0.55, 80 + bp.y * 0.5, Math.max(-4200, Math.min(4200, bp.z)));
+        want.set(-(W + 250), 1350 + bp.y * 0.2, look.z * 0.85);
         camTgt.lerp(look, snap ? 1 : sm(dt, 2.5)); camPos.lerp(want, snap ? 1 : sm(dt, 2.0));
       } else {
         // Ball cam, an independent implementation of the game's model (see the report): the camera sits at the car plus a
@@ -602,17 +603,25 @@
         // back). Yaw and height are low-passed so the swivel is smooth, and the turn rate is capped.
         var tb = _c.copy(bp).sub(fp), hl = Math.hypot(tb.x, tb.z), yaw;
         if (hl < 1) { var f0 = new T.Vector3(1, 0, 0).applyQuaternion(fc.g.quaternion); yaw = Math.atan2(f0.z, f0.x); } else yaw = Math.atan2(tb.z, tb.x);
-        if (snap) { D.yaw = yaw; D.hgt = 150; } else {
+        if (snap) { D.yaw = yaw; D.hgt = 115; } else {
           var dy = Math.atan2(Math.sin(yaw - D.yaw), Math.cos(yaw - D.yaw)); dy = Math.max(-5 * dt, Math.min(5 * dt, dy * sm(dt, 9)));
-          D.yaw += dy; D.hgt += (150 - D.hgt) * sm(dt, 3);
+          D.yaw += dy; D.hgt += (115 - D.hgt) * sm(dt, 3);
         }
         var fv = carVel(D.focus, Math.min(Math.floor(t), game.frames - 1)), spd = Math.min(1, Math.hypot(fv[0], fv[1], fv[2]) / 2300);
-        var dist = 330 * (1 + 0.55 * 0.3 * spd);
-        want.set(fp.x - Math.cos(D.yaw) * dist, fp.y + D.hgt, fp.z - Math.sin(D.yaw) * dist);
-        // keep the camera above the floor, below the ceiling and inside the walls
-        want.x = Math.max(-W + 70, Math.min(W - 70, want.x)); want.z = Math.max(-L + 70, Math.min(L - 70, want.z)); want.y = Math.max(70, Math.min(H - 80, want.y));
-        var dv = _c.copy(bp).lerp(fp, 0.2).sub(want).normalize(), hh = Math.hypot(dv.x, dv.z), ang = Math.atan2(dv.y, hh) - 4 * Math.PI / 180;
-        ang = Math.max(-0.5, Math.min(0.30, ang));   // cap the upward aim so the car stays in frame under a high ball
+        var dist = 300 * (1 + 0.55 * 0.3 * spd), cx = -Math.cos(D.yaw), cz = -Math.sin(D.yaw);
+        // Near a wall or the goal the offset is SHORTENED (camera slides toward the car) instead of the point being clamped,
+        // which used to park the camera behind a goal post or inside the goal net.
+        var lim = function (p, d, m) { return d > 1e-6 ? (m - p) / d : d < -1e-6 ? (-m - p) / d : 1e9; };
+        dist = Math.max(60, Math.min(dist, lim(fp.x, cx, W - 160), lim(fp.z, cz, L - 160)));
+        want.set(fp.x + cx * dist, fp.y + D.hgt, fp.z + cz * dist);
+        // Car on a side/back wall: step the camera off the wall toward the pitch and up, so the shot looks along the
+        // wall at the car instead of grazing the wall surface with the car cut off at the frame edge.
+        var wx = Math.max(0, Math.min(1, (Math.abs(fp.x) - (W - 500)) / 300)) * (fp.y > 150 ? 1 : 0);
+        var wz = Math.max(0, Math.min(1, (Math.abs(fp.z) - (L - 500)) / 300)) * (fp.y > 150 ? 1 : 0);
+        var wall = Math.max(wx, wz); want.x -= Math.sign(fp.x) * 700 * wx; want.z -= Math.sign(fp.z) * 700 * wz; want.y += 150 * wall;
+        want.y = Math.max(70, Math.min(H - 80, want.y));
+        var dv = _c.copy(bp).lerp(fp, 0.2 + 0.35 * wall).sub(want).normalize(), hh = Math.hypot(dv.x, dv.z), ang = Math.atan2(dv.y, hh) - 4 * Math.PI / 180;
+        ang = Math.max(-0.5, Math.min(0.14, ang));   // cap the upward aim (8 deg) so the car stays in the lower frame under a high ball
         look.set(want.x + Math.cos(Math.atan2(dv.z, dv.x)) * Math.cos(ang) * 1000, want.y + Math.sin(ang) * 1000, want.z + Math.sin(Math.atan2(dv.z, dv.x)) * Math.cos(ang) * 1000);
         camPos.copy(want); camTgt.copy(look);
         fov = Math.max(50, Math.min(95, 2 * Math.atan(Math.tan(55 * Math.PI / 180) / camera.aspect) * 180 / Math.PI));
