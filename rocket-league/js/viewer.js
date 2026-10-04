@@ -533,29 +533,27 @@
     }
     return out;
   }
+  // Director (reworked 2026-10-04 after "lots of fast cuts, cars not centred"). Modelled on the open-source viewers
+  // RLViser (VirxEC, MIT: nearest car to the ball, re-picked on a slow timer) and rocket-viewer (Longi94, MIT: rigid
+  // ball cam), plus the game's own ball-cam model (yaw-only offset behind the car, facing the ball). One shot type in
+  // play (the ball cam) and a goal shot; the focus changes only when another car has been nearest the ball for 1.2 s
+  // and the current shot has run 4 s, so cuts are rare and every one means "the play moved to another car".
   function directorUpdate(dt) {
     var g = game, i = Math.min(Math.floor(t), g.frames - 1), D = dir0, hz = g.hz, jump = (t - D.last) < 0 || (t - D.last) > 20;
-    var sc = carScores(i), best = 0; for (var c = 1; c < sc.length; c++) if (sc[c].s > sc[best].s) best = c;
-    var oldShot = D.shot, oldFocus = D.focus, ballY = ballObj.position.y, bv = carVel0(i);
-    var toGoal0 = Math.abs(bv[2]) > 2200 && Math.abs(ballObj.position.z) > 2800 && bv[2] * ballObj.position.z > 0;
-    if (jump) { D.focus = best; D.cand = -1; D.hi = ballY > 1000 || toGoal0; D.hiT = t; D.t0 = t - 1000; }
+    var bp = ballObj.position, best = 0, bd = 1e18;
+    for (var c = 0; c < carObjs.length; c++) { if (g.fl[c][i] & 2) continue; var d2 = carObjs[c].g.position.distanceToSquared(bp); if (d2 < bd) { bd = d2; best = c; } }   // demolished cars are skipped
+    var oldShot = D.shot, oldFocus = D.focus, kick = false;
+    for (var k = 0; k < g.kickoffs.length; k++) if (g.kickoffs[k] <= i && i - g.kickoffs[k] < 2) kick = true;
+    if (jump || kick) { D.focus = best; D.cand = -1; }
     else if (best !== D.focus) {
       if (D.cand !== best) { D.cand = best; D.candT0 = t; }
-      var margin = sc[best].s - sc[D.focus].s, forced = sc[best].touch && !sc[D.focus].touch && margin > 0.3;
-      if ((margin > 0.6 && t - D.candT0 > 0.8 * hz && t - D.t0 > 2.5 * hz) || forced) D.focus = best;
+      if (t - D.candT0 > 1.2 * hz && t - D.t0 > 4 * hz) { D.focus = best; D.cand = -1; }
     } else D.cand = -1;
-    // shot type
-    var shot = 'ball', kt = -1;
-    for (var k = 0; k < g.kickoffs.length; k++) if (g.kickoffs[k] <= i) kt = g.kickoffs[k];
-    var toGoal = Math.abs(bv[2]) > 2200 && Math.abs(ballObj.position.z) > 2800 && bv[2] * ballObj.position.z > 0;
-    var wantHi = ballY > 1000 || toGoal;
-    if (wantHi !== D.hi && t - D.hiT > (wantHi ? 0.4 : 0.7) * hz && t - D.t0 > 1.2 * hz) { D.hi = wantHi; D.hiT = t; D.t0 = t; oldShot = 'x'; }
-    // Kickoffs use the ball cam on the focus car (as the game's replay director does): a fixed wide shot made the cars tiny.
-    if (g.hold[i]) shot = 'goal'; else if (D.hi) shot = 'high';
-    if (shot !== oldShot || D.focus !== oldFocus) { if (shot !== D.shot || D.focus !== oldFocus || jump) { camSnap = true; D.t0 = t; dirSm.set(1, 0, 0); } }
+    var shot = g.hold[i] ? 'goal' : 'ball';
+    if (jump || shot !== oldShot || D.focus !== oldFocus) { camSnap = true; D.t0 = t; }
     D.shot = shot; D.last = t;
     var nm = $('carSel').options[D.focus]; $('ftag').textContent = nm ? nm.textContent : '';
-    $('ftag').className = 'ftag ' + (g.teams[D.focus] === 0 ? 'b' : 'o'); $('ftag').hidden = camMode !== 'director' || shot === 'kick' && false;
+    $('ftag').className = 'ftag ' + (g.teams[D.focus] === 0 ? 'b' : 'o'); $('ftag').hidden = camMode !== 'director';
     if (jump) D.log.length = 0;
     return D;
   }
@@ -584,22 +582,27 @@
       } else if (D.shot === 'kick') {
         fov = 64; want.set(800, 420, -2300); look.set(0, 150, 0);
         camPos.copy(want); camTgt.lerp(look, snap ? 1 : 1);
-      } else if (D.shot === 'high') {
-        fov = 40 * Math.max(1, Math.min(1.7, 1.55 / camera.aspect));
-        look.copy(bp).lerp(fp, 0.35); look.y = bp.y * 0.6 + 80; look.z = Math.max(-4300, Math.min(4300, look.z));
-        want.set(-(W + 250), 1700 + bp.y * 0.3, look.z * 0.85);
-        camTgt.lerp(look, snap ? 1 : sm(dt, 3)); camPos.lerp(want, snap ? 1 : sm(dt, 2.5));
       } else {
-        fov = 80; var tb = _c.copy(bp).sub(fp); tb.y = 0;
-        var fw2 = new T.Vector3(1, 0, 0).applyQuaternion(fc.g.quaternion); fw2.y = 0; if (fw2.lengthSq() < 1e-4) fw2.set(1, 0, 0); fw2.normalize();
-        var dd = tb.length() > 300 ? tb.normalize() : fw2;
-        if (snap) dirSm.copy(dd); else { // limit the camera's turn rate
-          var a0 = Math.atan2(dirSm.z, dirSm.x), a1 = Math.atan2(dd.z, dd.x), da = a1 - a0; da = Math.atan2(Math.sin(da), Math.cos(da));
-          da = Math.max(-maxTurn, Math.min(maxTurn, da)); dirSm.set(Math.cos(a0 + da), 0, Math.sin(a0 + da));
-        }
-        want.copy(fp).addScaledVector(dirSm, -400); want.y = Math.max(70, fp.y + 150 + Math.min(250, bp.y * 0.12));
-        look.copy(bp).lerp(fp, 0.12); look.y = Math.max(60, bp.y * 0.85);
-        camPos.lerp(want, snap ? 1 : sm(dt, 9)); camTgt.lerp(look, snap ? 1 : sm(dt, 7));
+        // Ball cam on the 3-D car->ball line (as RLViser / rocket-viewer do): with the car between the camera and the
+        // ball, the car sits in the middle of the frame and the ball beyond it. The line's elevation is clamped
+        // (-20..+35 deg) so a ball overhead doesn't put the camera under the floor, and the aim is pulled a quarter
+        // of the way back toward the car so it stays in frame then. Only the direction is smoothed (tau 0.1 s); the
+        // camera stays rigidly attached to the car, and it is kept inside the arena (no shots from behind a wall).
+        var tb = _c.copy(bp).sub(fp);
+        if (tb.lengthSq() < 1) tb.set(1, 0, 0).applyQuaternion(fc.g.quaternion);
+        var hl = Math.hypot(tb.x, tb.z), el = Math.max(-0.35, Math.min(0.6, Math.atan2(tb.y, Math.max(hl, 1e-3))));
+        if (hl < 1e-3) { tb.set(1, 0, 0).applyQuaternion(fc.g.quaternion); hl = Math.hypot(tb.x, tb.z) || 1; }
+        tb.set(tb.x / hl * Math.cos(el), Math.sin(el), tb.z / hl * Math.cos(el));
+        if (snap) dirSm.copy(tb); else { dirSm.lerp(tb, sm(dt, 10)); if (dirSm.lengthSq() < 1e-6) dirSm.copy(tb); dirSm.normalize(); }
+        var fv = carVel(D.focus, Math.min(Math.floor(t), game.frames - 1)), spd = Math.min(1, Math.hypot(fv[0], fv[1], fv[2]) / 2300);
+        var dist = 280 * (1 + 0.55 * 0.3 * spd);
+        want.copy(fp).addScaledVector(dirSm, -dist); want.y += 100;
+        want.x = Math.max(-W + 60, Math.min(W - 60, want.x)); want.z = Math.max(-L + 60, Math.min(L - 60, want.z));
+        want.y = Math.max(40, Math.min(H - 60, want.y));
+        look.copy(bp).lerp(fp, 0.25);
+        camPos.copy(want); camTgt.copy(look);
+        // 110 deg horizontal (the common pro setting), as vertical FOV; clamped for portrait screens.
+        fov = Math.max(50, Math.min(80, 2 * Math.atan(Math.tan(55 * Math.PI / 180) / camera.aspect) * 180 / Math.PI));
       }
       camSnap = false;
     } else if (camMode === 'debug') { fov = camera.fov;
