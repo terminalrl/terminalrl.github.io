@@ -20,7 +20,7 @@
 <main class="wrap">
 <section id="viewer">
   <h2>Replay viewer</h2>
-  <p class="muted">Four full 5-minute games, recorded in simulation. Terminal is blue and attacks the goal on the right of the default view. The scene is drawn procedurally in your browser; no game assets are used. Space plays or pauses, arrow keys seek, N / P jump to the next / previous goal, C or 1-5 switch camera, drag to orbit.</p>
+  <p class="muted">Four full 5-minute games, recorded in simulation. Terminal is blue and attacks the goal on the right of the default view. The scene is drawn procedurally in your browser; no game assets are used. Space plays or pauses, arrow keys seek, N / P jump to the next / previous goal, C, D or 0-5 switch camera (Director picks the action like a replay director), drag to orbit.</p>
   <div class="viewer" id="viewerBox">
     <div class="stage" id="stage" tabindex="0">
       <div class="hud" id="hud" hidden>
@@ -28,6 +28,7 @@
         <div class="board"><span class="nm tb">Terminal</span><span class="sc" id="s0">0</span><span class="clock" id="clock">5:00</span><span class="sc" id="s1">0</span><span class="nm to" id="oppName">Nexto</span></div>
         <div class="boosts r" id="boostR"></div>
       </div>
+      <div class="ftag b" id="ftag" hidden></div>
       <div class="banner" id="banner"><span>GOAL!</span><small id="bannerTxt"></small></div>
       <button class="bigplay" id="bigplay" hidden aria-label="Play">&#9654;</button>
       <div class="msg" id="msg">Loading 3-D viewer&hellip;</div>
@@ -41,7 +42,7 @@
       </div>
       <div class="row wrapr">
         <div class="grp" id="speeds"><button class="chip" data-s="0.5">0.5x</button><button class="chip on" data-s="1">1x</button><button class="chip" data-s="2">2x</button><button class="chip" data-s="4">4x</button></div>
-        <div class="grp" id="cams"><button class="chip on" data-c="broadcast">Broadcast</button><button class="chip" data-c="chase">Chase</button><button class="chip" data-c="car">Car cam</button><button class="chip" data-c="orbit">Orbit</button><button class="chip" data-c="top">Top-down</button></div>
+        <div class="grp" id="cams"><button class="chip on" data-c="director">Director</button><button class="chip" data-c="broadcast">Broadcast</button><button class="chip" data-c="chase">Chase</button><button class="chip" data-c="car">Car cam</button><button class="chip" data-c="orbit">Orbit</button><button class="chip" data-c="top">Top-down</button></div>
       </div>
       <div class="row wrapr">
         <label class="sel">Game <select id="gameSel"></select></label>

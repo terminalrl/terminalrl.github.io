@@ -10,7 +10,7 @@
   var stage = $('stage'), msg = $('msg'), box = $('viewerBox');
   var T, renderer, scene, camera, sun, hemi, flashLight, ballObj, ballHalo, ballBlob;
   var carObjs = [], padObjs = [], goalFx = null, particles = null, pAttr = {}, ceiling, envTex;
-  var game = null, t = 0, playing = false, speed = 1, camMode = 'broadcast', followCar = 0, lastTs = 0;
+  var game = null, t = 0, playing = false, speed = 1, camMode = 'director', followCar = 0, lastTs = 0;
   var lowQ = false, dirty = true, visible = true, started = false, ready = false, index = [], uScale = 1000, pendingPlay = false;
   var orbit = { th: 0.0, ph: 0.5, r: 8800, vth: 0, vph: 0 };
   var camPos = null, camTgt = null, camSnap = true, dirSm = null;
@@ -469,7 +469,7 @@
       o.parts.flame.visible = boosting; o.parts.core.visible = boosting;
       if (boosting) { var fk = 0.85 + 0.3 * Math.sin(t * 2.7 + c * 2.1) + 0.15 * Math.sin(t * 7.3); o.parts.flame.scale.set(fk, 1 + 0.2 * Math.sin(t * 5 + c), 1 + 0.2 * Math.sin(t * 5 + c)); o.parts.core.scale.set(fk, 1, 1); }
       var hgt = Math.max(0.2, 1 - cy / 700); o.blob.position.set(cx, 1.3, cz); o.blob.scale.setScalar(hgt); o.blob.material.opacity = hgt;
-      o.parts.tag.visible = !demo;
+      o.parts.tag.visible = !demo && o.g.position.distanceToSquared(camera.position) > 600 * 600;
       if (bars[c]) bars[c].style.width = Math.min(100, g.boost[c][i]) + '%';
       // history-based effects: deterministic from the data, so scrubbing is safe
       var K = lowQ ? 6 : 12, tc = g.teams[c] === 0 ? [0.25, 0.6, 1.0] : [1.0, 0.6, 0.2];
@@ -513,6 +513,53 @@
     dirty = true;
   }
 
+
+  /* ---------- director: picks a focus car and a shot, with hard cuts like the in-game replay director ---------- */
+  var dir0 = { focus: 0, shot: 'ball', t0: 0, cand: -1, candT0: 0, last: -1e9, hi: false, hiT: 0, log: [] };
+  function carVel(c, i) { var P3 = game.pos[c], j = Math.min(i + 1, game.frames - 1), k = Math.max(0, j - 1), hz = game.hz; return [(P3[j * 3] - P3[k * 3]) * hz, (P3[j * 3 + 1] - P3[k * 3 + 1]) * hz, (P3[j * 3 + 2] - P3[k * 3 + 2]) * hz]; }
+  function carScores(i) {
+    var g = game, b = g.ball, out = [], bx = b[i * 3], by = b[i * 3 + 1], bz = b[i * 3 + 2];
+    for (var c = 0; c < carObjs.length; c++) {
+      var P3 = g.pos[c], dx = bx - P3[i * 3], dy = by - P3[i * 3 + 1], dz = bz - P3[i * 3 + 2], d = Math.hypot(dx, dy, dz) + 1, v = carVel(c, i);
+      var closing = Math.max(0, (v[0] * dx + v[1] * dy + v[2] * dz) / d), eta = d / Math.max(closing, 600), sc = -eta;
+      var q = g.quat[c]; _qa.set(q[i * 4], q[i * 4 + 1], q[i * 4 + 2], q[i * 4 + 3]); _v0.set(1, 0, 0).applyQuaternion(_qa);
+      sc += 0.5 * (_v0.x * dx + _v0.y * dy + _v0.z * dz) / d;                       // facing the ball
+      var touch = false; for (var h = 0; h < 8; h++) { var f = Math.max(0, i - h); if (Math.hypot(b[f * 3] - P3[f * 3], b[f * 3 + 1] - P3[f * 3 + 1], b[f * 3 + 2] - P3[f * 3 + 2]) < 265) { touch = true; break; } }
+      if (touch) sc += 1.5;                                                          // recent toucher
+      var att = g.teams[c] === 0 ? 1 : -1;
+      if ((bz - P3[i * 3 + 2]) * att > 3000) sc -= 0.7;                              // far behind the play
+      if (g.fl[c][i] & 2) sc -= 100;                                                 // demolished
+      out.push({ s: sc, touch: touch, d: d });
+    }
+    return out;
+  }
+  function directorUpdate(dt) {
+    var g = game, i = Math.min(Math.floor(t), g.frames - 1), D = dir0, hz = g.hz, jump = (t - D.last) < 0 || (t - D.last) > 20;
+    var sc = carScores(i), best = 0; for (var c = 1; c < sc.length; c++) if (sc[c].s > sc[best].s) best = c;
+    var oldShot = D.shot, oldFocus = D.focus, ballY = ballObj.position.y, bv = carVel0(i);
+    var toGoal0 = Math.abs(bv[2]) > 2200 && Math.abs(ballObj.position.z) > 2800 && bv[2] * ballObj.position.z > 0;
+    if (jump) { D.focus = best; D.cand = -1; D.hi = ballY > 1000 || toGoal0; D.hiT = t; D.t0 = t - 1000; }
+    else if (best !== D.focus) {
+      if (D.cand !== best) { D.cand = best; D.candT0 = t; }
+      var margin = sc[best].s - sc[D.focus].s, forced = sc[best].touch && !sc[D.focus].touch && margin > 0.3;
+      if ((margin > 0.6 && t - D.candT0 > 0.8 * hz && t - D.t0 > 2.5 * hz) || forced) D.focus = best;
+    } else D.cand = -1;
+    // shot type
+    var shot = 'ball', kt = -1;
+    for (var k = 0; k < g.kickoffs.length; k++) if (g.kickoffs[k] <= i) kt = g.kickoffs[k];
+    var toGoal = Math.abs(bv[2]) > 2200 && Math.abs(ballObj.position.z) > 2800 && bv[2] * ballObj.position.z > 0;
+    var wantHi = ballY > 1000 || toGoal;
+    if (wantHi !== D.hi && t - D.hiT > (wantHi ? 0.4 : 0.7) * hz && t - D.t0 > 1.2 * hz) { D.hi = wantHi; D.hiT = t; D.t0 = t; oldShot = 'x'; }
+    if (g.hold[i]) shot = 'goal'; else if (kt >= 0 && i - kt < 3 * hz) shot = 'kick'; else if (D.hi) shot = 'high';
+    if (shot !== oldShot || D.focus !== oldFocus) { if (shot !== D.shot || D.focus !== oldFocus || jump) { camSnap = true; D.t0 = t; dirSm.set(1, 0, 0); } }
+    D.shot = shot; D.last = t;
+    var nm = $('carSel').options[D.focus]; $('ftag').textContent = nm ? nm.textContent : '';
+    $('ftag').className = 'ftag ' + (g.teams[D.focus] === 0 ? 'b' : 'o'); $('ftag').hidden = camMode !== 'director' || shot === 'kick' && false;
+    if (jump) D.log.length = 0;
+    return D;
+  }
+  function carVel0(i) { var b = game.ball, j = Math.min(i + 1, game.frames - 1), k = Math.max(0, j - 1), hz = game.hz; return [(b[j * 3] - b[k * 3]) * hz, (b[j * 3 + 1] - b[k * 3 + 1]) * hz, (b[j * 3 + 2] - b[k * 3 + 2]) * hz]; }
+
   /* ---------- cameras ---------- */
   var _a, _b, _c;
   function sm(dt, k) { return 1 - Math.exp(-k * dt); }
@@ -525,6 +572,35 @@
       if (!pointers.size) { orbit.th += orbit.vth * dt; orbit.ph = Math.max(0.05, Math.min(1.5, orbit.ph + orbit.vph * dt)); var dm = Math.exp(-4 * dt); orbit.vth *= dm; orbit.vph *= dm; }
       var cp = Math.cos(orbit.ph);
       camPos.set(Math.sin(orbit.th) * cp * orbit.r, Math.sin(orbit.ph) * orbit.r, -Math.cos(orbit.th) * cp * orbit.r); camTgt.set(0, 250, 0); fov = 45;
+    } else if (camMode === 'director') {
+      var D = directorUpdate(dt), bp = ballObj.position, fc = carObjs[D.focus], fp = fc.g.position, snap = camSnap, kk = 1, ang;
+      var maxTurn = 2.6 * dt;
+      if (D.shot === 'goal') {
+        var gl = 0; for (var q = 0; q < game.goals.length; q++) if (game.goals[q][0] <= t) gl = game.goals[q];
+        var sgn = gl && gl[1] === 0 ? 1 : -1, age = Math.max(0, (t - gl[0]) / game.hz);
+        fov = 60; want.set(bp.x > 0 ? 1500 : -1500, 180 + age * 25, sgn * (L - 1900 + age * 160)); look.copy(bp); look.y = Math.max(120, bp.y);
+        if (snap) camPos.copy(want); camPos.lerp(want, sm(dt, 6)); camTgt.lerp(look, snap ? 1 : sm(dt, 6));
+      } else if (D.shot === 'kick') {
+        fov = 64; want.set(800, 420, -2300); look.set(0, 150, 0);
+        camPos.copy(want); camTgt.lerp(look, snap ? 1 : 1);
+      } else if (D.shot === 'high') {
+        fov = 40 * Math.max(1, Math.min(1.7, 1.55 / camera.aspect));
+        look.copy(bp).lerp(fp, 0.35); look.y = bp.y * 0.6 + 80; look.z = Math.max(-4300, Math.min(4300, look.z));
+        want.set(-(W + 250), 1700 + bp.y * 0.3, look.z * 0.85);
+        camTgt.lerp(look, snap ? 1 : sm(dt, 3)); camPos.lerp(want, snap ? 1 : sm(dt, 2.5));
+      } else {
+        fov = 80; var tb = _c.copy(bp).sub(fp); tb.y = 0;
+        var fw2 = new T.Vector3(1, 0, 0).applyQuaternion(fc.g.quaternion); fw2.y = 0; if (fw2.lengthSq() < 1e-4) fw2.set(1, 0, 0); fw2.normalize();
+        var dd = tb.length() > 300 ? tb.normalize() : fw2;
+        if (snap) dirSm.copy(dd); else { // limit the camera's turn rate
+          var a0 = Math.atan2(dirSm.z, dirSm.x), a1 = Math.atan2(dd.z, dd.x), da = a1 - a0; da = Math.atan2(Math.sin(da), Math.cos(da));
+          da = Math.max(-maxTurn, Math.min(maxTurn, da)); dirSm.set(Math.cos(a0 + da), 0, Math.sin(a0 + da));
+        }
+        want.copy(fp).addScaledVector(dirSm, -400); want.y = Math.max(70, fp.y + 150 + Math.min(250, bp.y * 0.12));
+        look.copy(bp).lerp(fp, 0.12); look.y = Math.max(60, bp.y * 0.85);
+        camPos.lerp(want, snap ? 1 : sm(dt, 9)); camTgt.lerp(look, snap ? 1 : sm(dt, 7));
+      }
+      camSnap = false;
     } else if (camMode === 'debug') { fov = camera.fov;
     } else if (camMode === 'top') {
       var tf = Math.tan(21 * Math.PI / 180), asp = camera.aspect, h = Math.max(6400 / tf, 5300 / (tf * asp));
@@ -598,10 +674,10 @@
   }
   function setCam(m) {
     camMode = m; camSnap = true; if (dirSm) dirSm.set(1, 0, 0);
-    $('carWrap').style.display = (m === 'chase' || m === 'car') ? '' : 'none';
+    $('carWrap').style.display = (m === 'chase' || m === 'car') ? '' : 'none'; $('ftag').hidden = m !== 'director'; dir0.last = -1e9;
     Array.prototype.forEach.call($('cams').children, function (b) { b.classList.toggle('on', b.dataset.c === m); }); dirty = true;
   }
-  var CAMS = ['broadcast', 'chase', 'car', 'orbit', 'top'];
+  var CAMS = ['director', 'broadcast', 'chase', 'car', 'orbit', 'top'];
   function bindUI() {
     $('play').onclick = togglePlay;
     $('prevg').onclick = function () { nextGoal(-1); }; $('nextg').onclick = function () { nextGoal(1); };
@@ -640,7 +716,7 @@
       else if (k === 'ArrowLeft') { e.preventDefault(); seek(t - game.hz * (e.shiftKey ? 30 : 5)); }
       else if (k === 'n' || k === 'N') nextGoal(1); else if (k === 'p' || k === 'P') nextGoal(-1);
       else if (k === 'c' || k === 'C') setCam(CAMS[(CAMS.indexOf(camMode) + 1) % CAMS.length]);
-      else if (k >= '1' && k <= '5') setCam(CAMS[+k - 1]);
+      else if (k === '0' || k === 'd' || k === 'D') setCam('director'); else if (k >= '1' && k <= '5') setCam(CAMS[+k]);
       else if (k === '+' || k === '=') cycleSpeed(1); else if (k === '-') cycleSpeed(-1);
     });
   }
@@ -653,6 +729,8 @@
   // test hook (harmless): lets automated checks drive the viewer
   window.TerminalViewer = {
     seek: function (s) { if (game) seek(s * game.hz); }, cam: setCam, play: togglePlay, speed: function (s) { speed = s; }, start: start,
+    ballPos: function () { return ballObj.position.toArray(); },
+    dir: function () { return { focus: dir0.focus, shot: dir0.shot }; },
     state: function () { return { t: t, ready: ready, game: game && game.id, mode: camMode, playing: playing, low: lowQ }; },
     low: function (v) { lowQ = !!v; if (renderer) applyQuality(); }, car: function (c) { followCar = c; camSnap = true; },
     dbg: function (p, l, f) { camMode = 'debug'; camPos.set(p[0], p[1], p[2]); camTgt.set(l[0], l[1], l[2]); camera.fov = f || 40; camera.updateProjectionMatrix(); dirty = true; },
