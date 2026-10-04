@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terminal - a self-play Rocket League bot</title>
+<meta name="description" content="Terminal is a Rocket League bot trained entirely by self-play reinforcement learning in the RocketSim physics simulator. Watch recorded games in 3-D.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%2336a2ff'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%230b0f17'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<p class="wrap" style="margin:16px auto 0"><a href="../" style="color:var(--mu);text-decoration:none">&larr; TerminalRL</a></p>
+<header class="hero wrap">
+  <p class="eyebrow">RLBot Championship 2026 entry</p>
+  <h1>Terminal</h1>
+  <p class="lead">Terminal is a Rocket League bot trained entirely by self-play reinforcement learning in a physics simulator (RocketSim). It plays 1v1, 2v2 and 3v3, and was entered in the RLBot Championship 2026. The replays, clips and numbers below come from our latest checkpoints, playing in simulation.</p>
+  <nav class="jump"><a href="#viewer">Replay viewer</a><a href="#clips">Clips</a><a href="#results">Results</a></nav>
+</header>
+
+<main class="wrap">
+<section id="viewer">
+  <h2>Replay viewer</h2>
+  <p class="muted">Recorded bot games, played back as positions only (no policy runs in your browser). Blue is Terminal and attacks the goal at the far end of the default view. Drag to look around, scroll or pinch to zoom.</p>
+  <div class="viewer" id="viewerBox">
+    <div class="stage" id="stage">
+      <div class="hud" id="hud" hidden>
+        <span class="sc"><b class="tb">Terminal</b> <span id="s0">0</span> - <span id="s1">0</span> <b class="to" id="oppName">Nexto</b></span>
+        <span class="tm" id="timeTxt">0:00.0</span>
+      </div>
+      <div class="banner" id="banner" hidden></div>
+      <div class="msg" id="msg">Loading 3-D viewer&hellip;</div>
+    </div>
+    <div class="ctl">
+      <div class="row">
+        <button id="play" class="btn" aria-label="Play or pause">Play</button>
+        <input id="scrub" type="range" min="0" max="1" step="0.01" value="0" aria-label="Scrub">
+      </div>
+      <div class="row wrapr">
+        <div class="grp" id="speeds"><button class="chip" data-s="0.5">0.5x</button><button class="chip on" data-s="1">1x</button><button class="chip" data-s="2">2x</button></div>
+        <div class="grp" id="cams"><button class="chip on" data-c="orbit">Orbit</button><button class="chip" data-c="free">Free</button><button class="chip" data-c="follow">Follow car</button><button class="chip" data-c="ball">Ball cam</button><button class="chip" data-c="top">Top-down</button></div>
+      </div>
+      <div class="row wrapr">
+        <label class="sel">Game <select id="gameSel"></select></label>
+        <label class="sel" id="carWrap">Car <select id="carSel"></select></label>
+      </div>
+      <p class="small muted" id="gameNote"></p>
+      <p class="small muted">Free camera: drag to look, mouse wheel / pinch to move, W A S D Q E on a keyboard.</p>
+    </div>
+  </div>
+</section>
+
+<section id="clips">
+  <h2>Gallery</h2>
+  <div class="grid">
+    <figure><video controls preload="none" playsinline muted poster="media/clip_1v1_nexto.jpg"><source src="media/clip_1v1_nexto.mp4" type="video/mp4"></video><figcaption>1v1: Terminal (K6) vs Nexto, goal</figcaption></figure>
+    <figure><video controls preload="none" playsinline muted poster="media/clip_2v2_nexto.jpg"><source src="media/clip_2v2_nexto.mp4" type="video/mp4"></video><figcaption>2v2: Terminal (T8) vs Nexto, goal</figcaption></figure>
+    <figure><video controls preload="none" playsinline muted poster="media/clip_3v3_nexto.jpg"><source src="media/clip_3v3_nexto.mp4" type="video/mp4"></video><figcaption>3v3: Terminal (T8) vs Nexto, goal</figcaption></figure>
+    <figure><video controls preload="none" playsinline muted poster="media/clip_3v3_chadgpt.jpg"><source src="media/clip_3v3_chadgpt.mp4" type="video/mp4"></video><figcaption>3v3: Terminal (T8) vs ChadGPT, goal</figcaption></figure>
+  </div>
+  <p class="small muted">3-D clips rendered with BeautifulVis (car and arena models by ZealanL).</p>
+</section>
+
+<section id="results">
+  <h2>Results</h2>
+  <p class="muted">Goals for / against per 5-minute game, greedy (argmax) play, in our simulator.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Mode</th><th>Opponent</th><th>Goals for / against</th><th>Games</th></tr></thead>
+    <tbody>
+      <tr><td>1v1</td><td>Nexto</td><td>23.8 / 1.0</td><td>200</td></tr>
+      <tr><td>1v1</td><td>Wisp v2 (earlier K6 checkpoint)</td><td>11.0 / 4.4</td><td>64</td></tr>
+      <tr><td>2v2</td><td>Nexto</td><td>6.3 / 0.8 (98% wins)</td><td>128</td></tr>
+      <tr><td>2v2</td><td>Wisp</td><td>5.0 / 1.2 (91% wins)</td><td>64</td></tr>
+      <tr><td>3v3</td><td>Nexto</td><td>4.7 / 0.2 (98% wins)</td><td>128</td></tr>
+      <tr><td>3v3</td><td>ChadGPT</td><td>6.1 / 1.8 (94% wins)</td><td>128</td></tr>
+      <tr><td>3v3</td><td>Wisp</td><td>5.2 / 0.7 (97% wins)</td><td>64</td></tr>
+    </tbody></table></div>
+  <p>Elo from a round-robin ladder (a random policy = 0): Nexto 960, Coconut 1041, best Terminal checkpoint 1359.</p>
+  <p class="caveat">All numbers are from simulation (RocketSim), not the real game.</p>
+  <figure class="chart"><img loading="lazy" src="img/elo.png" width="1432" height="780" alt="Elo versus training steps for the Terminal lineage, with Nexto, Necto and Coconut as reference lines"><figcaption>Elo versus training experience (round-robin ladder, 95% bootstrap CI).</figcaption></figure>
+  <figure class="chart"><img loading="lazy" src="img/vs_nexto.png" width="2340" height="676" alt="Goals for, goals against and duplicate score versus Nexto over training"><figcaption>Strength versus Nexto over training: goals for, goals against and duplicate score on random starts.</figcaption></figure>
+</section>
+</main>
+
+<footer class="wrap">
+  <p>Bots are not published and cannot be downloaded. Simulation: RocketSim. Opponents: Nexto/Necto (RLGym team, CC BY-NC-SA 4.0), ChadGPT. Wisp v2 is a public GigaLearn bot used as a benchmark.</p>
+  <p>3-D clips rendered with BeautifulVis (car and arena models by ZealanL). The interactive viewer draws a simplified procedural arena with three.js.</p>
+</footer>
+<script src="js/viewer.js" defer></script>
+</body>
+</html>
