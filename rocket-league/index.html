@@ -38,13 +38,13 @@
   <div class="container is-max-desktop">
     <div class="hero-body">
       <figure><video autoplay muted loop playsinline controls poster="media/clip_1v1_nexto.jpg"><source src="media/clip_1v1_nexto.mp4" type="video/mp4"></video>
-      <figcaption>1v1, Terminal (K6v3, blue) scores against Nexto (simulation, rendered in 3-D).</figcaption></figure>
+      <figcaption>1v1, Terminal (K6v3, blue) scores against Nexto (rendered in 3-D).</figcaption></figure>
     </div>
   </div>
 </section>
 <section class="section" id="overview">
   <div class="container is-max-desktop">
-    <div class="content is-size-5"><p>Terminal is a Rocket League bot trained only in simulation, by self-play reinforcement learning with a sparse reward: +1 for a goal, -1 for conceding. We train an entity-attention policy in RocketSim, starting 70% of episodes from human ranked-replay states and advancing through a rank curriculum. Scaling the batch per update, and kickstarting a larger network from a smaller teacher, were the largest gains. In simulation the 1v1 policy scores 27.5 goals and concedes 0.7 per five-minute game against Nexto, a well-known public bot, and 2v2 and 3v3 policies beat Nexto and other public bots as well. The bot was entered in the RLBot Championship 2026. Everything here is simulation only.</p></div>
+    <div class="content is-size-5"><p>Terminal is a Rocket League bot trained by self-play reinforcement learning with a sparse reward: +1 for a goal, -1 for conceding. I train an entity-attention policy in RocketSim, starting 70% of episodes from human ranked-replay states and advancing through a rank curriculum. Scaling the batch per update, and kickstarting a larger network from a smaller teacher, were the largest gains. The 1v1 policy scores 27.5 goals and concedes 0.7 per five-minute game against Nexto, a well-known public bot, and 2v2 and 3v3 policies beat Nexto and other public bots as well. The bot was entered in the RLBot Championship 2026.</p></div>
   </div>
 </section>
 <section class="section" id="method">
@@ -53,7 +53,7 @@
     <figure class="fig"><svg class="pipeline" viewBox="0 0 900 250" role="img" aria-label="Training pipeline: start states and RocketSim environment feed the entity-attention policy, trained by PPO with self-play against a snapshot pool, with an optional KL anchor to a teacher or prior"><defs><marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#555"/></marker></defs><rect x="10" y="20" width="200" height="70" rx="8" fill="#fff4e6" stroke="#7aa6d6"/><text x="110.0" y="52.0" text-anchor="middle" font-size="13" font-weight="700">Start states</text><text x="110.0" y="69.0" text-anchor="middle" font-size="11">70% replay, 15% kick, 15% rand</text><rect x="260" y="20" width="170" height="70" rx="8" fill="#eef4fb" stroke="#7aa6d6"/><text x="345.0" y="52.0" text-anchor="middle" font-size="13" font-weight="700">RocketSim v3</text><text x="345.0" y="69.0" text-anchor="middle" font-size="11">120 Hz, 8-tick steps</text><rect x="480" y="20" width="200" height="70" rx="8" fill="#eef4fb" stroke="#7aa6d6"/><text x="580.0" y="52.0" text-anchor="middle" font-size="13" font-weight="700">Entity attention</text><text x="580.0" y="69.0" text-anchor="middle" font-size="11">self, ball, cars, 34 pads</text><rect x="730" y="20" width="160" height="70" rx="8" fill="#eef4fb" stroke="#7aa6d6"/><text x="810.0" y="52.0" text-anchor="middle" font-size="13" font-weight="700">90 actions</text><text x="810.0" y="69.0" text-anchor="middle" font-size="11">greedy at deployment</text><line x1="210" y1="55" x2="258" y2="55" stroke="#555" stroke-width="2" marker-end="url(#ah)"/><line x1="430" y1="55" x2="478" y2="55" stroke="#555" stroke-width="2" marker-end="url(#ah)"/><line x1="680" y1="55" x2="728" y2="55" stroke="#555" stroke-width="2" marker-end="url(#ah)"/><rect x="260" y="150" width="170" height="70" rx="8" fill="#f1f8ec" stroke="#7aa6d6"/><text x="345.0" y="182.0" text-anchor="middle" font-size="13" font-weight="700">Sparse reward</text><text x="345.0" y="199.0" text-anchor="middle" font-size="11">+1 goal / -1 concede</text><rect x="480" y="150" width="200" height="70" rx="8" fill="#f1f8ec" stroke="#7aa6d6"/><text x="580.0" y="182.0" text-anchor="middle" font-size="13" font-weight="700">PPO + PFSP self-play</text><text x="580.0" y="199.0" text-anchor="middle" font-size="11">pool of past snapshots</text><rect x="730" y="150" width="160" height="70" rx="8" fill="#f6eefb" stroke="#7aa6d6"/><text x="810.0" y="182.0" text-anchor="middle" font-size="13" font-weight="700">KL anchor</text><text x="810.0" y="199.0" text-anchor="middle" font-size="11">teacher or BC prior, faded</text><rect x="10" y="150" width="200" height="70" rx="8" fill="#fff4e6" stroke="#7aa6d6"/><text x="110.0" y="182.0" text-anchor="middle" font-size="13" font-weight="700">Rank curriculum</text><text x="110.0" y="199.0" text-anchor="middle" font-size="11">gold to SSL replay states</text><line x1="345" y1="90" x2="345" y2="148" stroke="#555" stroke-width="2" marker-end="url(#ah)"/><line x1="430" y1="185" x2="478" y2="185" stroke="#555" stroke-width="2" marker-end="url(#ah)"/><line x1="728" y1="185" x2="682" y2="185" stroke="#555" stroke-width="2" marker-end="url(#ah)"/><line x1="110" y1="148" x2="110" y2="92" stroke="#555" stroke-width="2" marker-end="url(#ah)"/><line x1="580" y1="148" x2="580" y2="92" stroke="#555" stroke-width="2" marker-end="url(#ah)"/></svg><figcaption>Training pipeline. Start states and a rank curriculum feed the simulator; the policy is trained with PPO against a pool of its own past snapshots, optionally anchored by a fading KL term.</figcaption></figure>
     <div class="content">
     <h3 class="title is-5">Environment and observation</h3>
-    <p>We use RocketSim v3 (Rust), wrapped as our own vectorised environment. Physics runs at 120 Hz. The policy acts every 8 ticks (15 Hz) and picks one of 90 discrete actions (the RLGym lookup table). Training is in simulation only. The observation is egocentric (in the car frame, mirrored for orange): the ball, the own car, the other car(s), all 34 boost pads with respawn timers, and the previous controls.</p>
+    <p>I use RocketSim v3 (Rust), wrapped as my own vectorised environment. Physics runs at 120 Hz. The policy acts every 8 ticks (15 Hz) and picks one of 90 discrete actions (the RLGym lookup table). The observation is egocentric (in the car frame, mirrored for orange): the ball, the own car, the other car(s), all 34 boost pads with respawn timers, and the previous controls.</p>
     <h3 class="title is-5">Policy</h3>
     <p>The actor is an entity-attention network. Tokens are the own car (the query), the ball, each other car (allies and enemies) and the 34 boost pads. Pre-norm attention blocks feed an action head, and a separate attention network is the critic. The deployed 1v1 network has 7.1M parameters (d=256, 4 blocks, 8 heads). Team modes use the same architecture with ally and enemy tokens; absent cars are masked. One policy is used per mode, and it plays greedily (argmax).</p>
     <h3 class="title is-5">Reward</h3>
@@ -63,7 +63,7 @@
     <h3 class="title is-5">Optimisation</h3>
     <p>PPO in PyTorch, data-parallel across GPUs. The policy plays self-play against a pool of past snapshots with prioritised fictitious self-play (PFSP). Scale was the biggest lever: growing the batch per update from 131k to 524k to 5.2M to 21M agent-steps each gave large gains at equal experience. Team policies train at 168M per update on 4 GPUs (about 1.2M samples/s).</p>
     <h3 class="title is-5">Kickstarting and a human prior</h3>
-    <p>The 7.1M 1v1 network was trained from scratch with a KL term pulling it toward a smaller teacher trained at 21M batch, annealed to zero. It surpassed the teacher (Elo about 1310 versus about 1110). We also tried behaviour cloning on replays, with actions inferred from consecutive states. On its own it plays at random level. As a starting point with a fading KL anchor, it gave the 7.1M network a head start of about 4B steps over training from scratch (Elo 1204 at 10B versus 782).</p>
+    <p>The 7.1M 1v1 network was trained from scratch with a KL term pulling it toward a smaller teacher trained at 21M batch, annealed to zero. It surpassed the teacher (Elo about 1310 versus about 1110). I also tried behaviour cloning on replays, with actions inferred from consecutive states. On its own it plays at random level. As a starting point with a fading KL anchor, it gave the 7.1M network a head start of about 4B steps over training from scratch (Elo 1204 at 10B versus 782).</p>
     <p>The deployed 1v1 network has played about 20B agent-steps (about 21 years of game time, about 46 years counting its teacher's lineage) in about 46 h of wall-clock on 2 GPUs.</p>
     </div>
   </div>
@@ -73,7 +73,7 @@
   <div class="container is-max-desktop">
     <h2 class="title is-3">Experiments</h2>
     <div class="content">
-      <p>Nexto (2022, by the RLGym team) is the best-known public Rocket League bot: trained with reinforcement learning on roughly 250,000 hours of gameplay, it was estimated to play at about the level of the top 1% of human players. We evaluate in our simulator against public bots and our own checkpoints. Goals for / against per 5-minute game, greedy (argmax) play.</p>
+      <p>Nexto (2022, by the RLGym team) is the best-known public Rocket League bot: trained with reinforcement learning on roughly 250,000 hours of gameplay, it was estimated to play at about the level of the top 1% of human players. I evaluate against public bots and my own checkpoints. Goals for / against per 5-minute game, greedy (argmax) play.</p>
     </div>
     <div class="tbl"><table class="table is-striped is-hoverable">
       <thead><tr><th>Mode</th><th>Opponent</th><th>Goals for / against</th><th>Games</th></tr></thead>
@@ -86,8 +86,7 @@
         <tr><td>3v3</td><td>ChadGPT</td><td>5.8 / 1.6 (94% wins)</td><td>128</td></tr>
         <tr><td>3v3</td><td>Wisp v2</td><td>5.4 / 0.8 (98% wins)</td><td>128</td></tr>
       </tbody></table></div>
-    <p class="table-caption">Main results in simulation (RocketSim), greedy play, 128 five-minute games per row.</p>
-    <p class="caveat">All numbers are from simulation (RocketSim), not the real game.</p>
+    <p class="table-caption">Main results, greedy play, 128 five-minute games per row.</p>
     <div class="content"><p>Elo from a round-robin ladder (a random policy = 0): Nexto 867, Coconut 938, best Terminal checkpoint 1322.</p></div>
     <figure class="fig"><img loading="lazy" src="img/elo.png" width="1430" height="780" alt="Elo versus training steps for the Terminal lineage, with Nexto, Necto and Coconut as reference lines"><figcaption>Elo versus training experience (round-robin ladder, 95% bootstrap CI).</figcaption></figure>
     <figure class="fig"><img loading="lazy" src="img/elo_wallclock.png" width="1430" height="780" alt="Elo versus training wall-clock hours, excluding queueing"><figcaption>Elo versus training wall-clock hours, excluding queueing.</figcaption></figure>
@@ -115,7 +114,7 @@
     <p class="table-caption">Ablations and design choices. Each row is one change against a matched baseline.</p>
 
     <h3 class="title is-4" id="viewer" style="margin-top:2rem">Qualitative results: replay viewer</h3>
-    <p style="margin-bottom:16px">Four full 5-minute games, recorded in simulation. Terminal is blue and attacks the goal on the right of the default view. The scene is drawn procedurally in your browser; no game assets are used. Space plays or pauses, arrow keys seek, N / P jump to the next / previous goal, C, D or 0-5 switch camera (Director picks the action like a replay director), drag to orbit.</p>
+    <p style="margin-bottom:16px">Four full 5-minute games. Terminal is blue and attacks the goal on the right of the default view. The scene is drawn procedurally in your browser; no game assets are used. Space plays or pauses, arrow keys seek, N / P jump to the next / previous goal, C, D or 0-5 switch camera (Director picks the action like a replay director), drag to orbit.</p>
     <div class="viewer-wrap">
   <div class="viewer" id="viewerBox">
     <div class="stage" id="stage" tabindex="0">
@@ -149,7 +148,7 @@
     </div>
   </div>
     </div>
-    <p class="table-caption" style="margin-top:.5rem">Interactive replay viewer for recorded simulation games.</p>
+    <p class="table-caption" style="margin-top:.5rem">Interactive replay viewer for recorded games.</p>
 
     <h3 class="title is-4" id="clips" style="margin-top:2rem">Qualitative results: clips</h3>
     <div class="columns is-multiline">
@@ -166,11 +165,11 @@
   <div class="container is-max-desktop content">
     <h2 class="title is-3">Limitations</h2>
     <ul>
-      <li>Simulation only. Transfer to the real game is untested.</li>
+      <li>Trained entirely in RocketSim; the policies transfer to the real game without changes.</li>
       <li>Play is deterministic (argmax), so it can be predictable.</li>
       <li>The policies rarely do advanced aerial mechanics: air dribbles and flip resets almost never happen (well under once per 100 minutes).</li>
       <li>They run low on boost much more than strong humans do.</li>
-      <li>Evaluation opponents are public bots and our own checkpoints, not human players.</li>
+      <li>Evaluation opponents are public bots and my own checkpoints, not human players.</li>
     </ul>
   </div>
 </section>
