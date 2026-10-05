@@ -53,14 +53,4 @@
 @media(max-width:600px){.board .nm{display:none}.boosts{top:44px}.bb>div{width:52px}}
 .ftag{position:absolute;left:50%;top:64px;transform:translateX(-50%);padding:4px 14px;border-radius:99px;font-weight:800;font-size:.9rem;background:rgba(6,9,15,.75);pointer-events:none;border:1px solid rgba(255,255,255,.15)}.ftag.b{color:#6fb8ff}.ftag.o{color:#ffb36a}
 
-/* page-level additions on top of Bulma (Nerfies layout) */
-.publication-title,.title,.subtitle{font-family:'Google Sans','Noto Sans',sans-serif}
-body{font-family:'Noto Sans',sans-serif;overflow-x:hidden}
-.teaser video,.video-card video{width:100%;height:auto;display:block;border-radius:10px;background:#000}
-.video-card figcaption,.chart figcaption{color:#6b7280;font-size:.88rem;margin-top:6px;text-align:center}
-.chart img{width:100%;height:auto;display:block;border-radius:10px}
-.tbl{overflow-x:auto}
-.tbl table{margin:0 auto;font-variant-numeric:tabular-nums}
-.caveat{border-left:3px solid #ff9a3c;padding:2px 12px;color:#7a4b12;margin:12px 0}
 .viewer-wrap{max-width:980px;margin:0 auto}
-@media(max-width:600px){.hero-body{padding-left:.75rem;padding-right:.75rem}.publication-title{font-size:2.2rem!important}}

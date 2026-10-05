@@ -5,56 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TerminalRL</title>
 <meta name="description" content="TerminalRL: reinforcement-learning policies trained in simulation.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='4' y='24' font-family='monospace' font-size='22' fill='%2336a2ff'%3E%3E_%3C/text%3E%3C/svg%3E">
-<style>
-:root{--bg:#0b0f17;--panel:#121826;--line:#232c40;--tx:#e6ebf5;--mu:#97a3ba;--acc:#36a2ff}
-*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden}
-.wrap{max-width:860px;margin:0 auto;padding:0 16px}
-header{padding:72px 0 8px}
-h1{font-size:clamp(2.6rem,9vw,4rem);margin:0 0 12px;letter-spacing:-.02em;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-h1 span{color:var(--acc)}
-.lead{font-size:1.1rem;color:#c5cee0;max-width:40em;margin:0}
-h2{font-size:1rem;color:var(--mu);text-transform:uppercase;letter-spacing:.12em;margin:48px 0 14px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
-.card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;color:var(--tx);text-decoration:none}
-a.card:hover{border-color:var(--acc)}
-.card h3{margin:0 0 6px;font-size:1.25rem}
-.card p{margin:0;color:#c5cee0}
-.tag{display:inline-block;margin-top:14px;font-size:.85rem;color:var(--acc)}
-.card.soon{opacity:.6}
-.card.soon .tag{color:var(--mu)}
-footer{margin:64px 0 32px;color:var(--mu);font-size:.85rem}
-</style>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%2336a2ff'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%230b0f17'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/site.css">
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Terminal<span>RL</span></h1>
-    <p class="lead">Reinforcement-learning policies trained in simulation. The projects share one approach: learn from sparse,
-      outcome-based rewards in fast simulators, with curricula over start states, and measure the result against strong fixed
-      baselines.</p>
-  </header>
-
-  <h2>Projects</h2>
-  <div class="cards">
-    <a class="card" href="rocket-league/">
-      <h3>Rocket League</h3>
-      <p>Terminal, a bot trained by self-play in RocketSim. Plays 1v1, 2v2 and 3v3; entered in the RLBot Championship 2026.
-        Interactive replays, clips and results.</p>
-      <span class="tag">View project &rarr;</span>
-    </a>
-    <a class="card" href="clothrl/">
-      <h3>clothrl</h3>
-      <p>A Franka arm learns to insert a cork into a jar, stack cubes and drape a cloth, from a sparse success reward in
-        GPU-parallel physics. Toward pressing a cork through a cloth.</p>
-      <span class="tag">View project &rarr;</span>
-    </a>
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">TerminalRL</h1>
+          <p class="subtitle is-4">Reinforcement-learning policies trained in simulation</p>
+          <div class="is-size-5 publication-authors"><span class="author-block">TerminalRL</span></div>
+          <div class="publication-links" style="margin-top:.5rem">
+<span class="link-block"><a href="rocket-league/" class="button is-normal is-rounded is-dark"><span class="icon"><i class="fas fa-gamepad"></i></span><span>Rocket League</span></a></span>
+<span class="link-block"><a href="clothrl/" class="button is-normal is-rounded is-dark"><span class="icon"><i class="fas fa-hand"></i></span><span>clothrl</span></a></span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <footer>TerminalRL. Trained policies are not published.</footer>
-</div>
+</section>
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="content has-text-justified">
+      <p>Reinforcement-learning policies trained in simulation. The projects share one approach: learn from sparse, outcome-based rewards in fast simulators, with curricula over start states, and measure the result against strong fixed baselines.</p>
+    </div>
+    <h2 class="title is-4" style="margin-top:2rem">Projects</h2>
+    <div class="paper-card"><div class="columns is-gapless">
+      <div class="column is-5 thumb"><a href="rocket-league/"><img src="rocket-league/media/clip_1v1_nexto.jpg" alt="Terminal scoring against Nexto in 3-D" loading="lazy"></a></div>
+      <div class="column is-7 body">
+        <h3 class="title is-5"><a href="rocket-league/">Terminal: a self-play Rocket League bot</a></h3>
+        <p>Terminal, a bot trained by self-play in RocketSim. Plays 1v1, 2v2 and 3v3; entered in the RLBot Championship 2026. Interactive replays, clips and results.</p>
+        <p style="margin-top:.75rem"><a href="rocket-league/" class="button is-small is-rounded is-dark"><span class="icon"><i class="fas fa-gamepad"></i></span><span>Project page</span></a></p>
+      </div>
+    </div></div>
+    <div class="paper-card"><div class="columns is-gapless">
+      <div class="column is-5 thumb"><a href="clothrl/"><img src="clothrl/media/cork_table.jpg" alt="Franka arm inserting a cork into a jar" loading="lazy"></a></div>
+      <div class="column is-7 body">
+        <h3 class="title is-5"><a href="clothrl/">clothrl: manipulation from a sparse reward</a></h3>
+        <p>A Franka arm learns to insert a cork into a jar, stack cubes and drape a cloth, from a sparse success reward in GPU-parallel physics. Toward pressing a cork through a cloth.</p>
+        <p style="margin-top:.75rem"><a href="clothrl/" class="button is-small is-rounded is-dark"><span class="icon"><i class="fas fa-hand"></i></span><span>Project page</span></a></p>
+      </div>
+    </div></div>
+  </div>
+</section>
+<footer class="footer">
+  <div class="container is-max-desktop">
+    <div class="content has-text-centered is-size-7">
+      <p>TerminalRL. Trained policies are not published.</p>
+      <p>Website template adapted from <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>, licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+    </div>
+  </div>
+</footer>
 <script src="js/ping.js" defer></script>
 </body>
 </html>
